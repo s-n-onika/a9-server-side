@@ -2,10 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
-const createRoomsRouter = require("./routes/rooms");
+const createRoomsRouter = require("./routes/createRoomsRoute");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -50,107 +50,105 @@ const verifyToken = (req, res, next) => {
     });
 };
 
+const db = client.db("StudyNookBD");
+
+// এন্ডপয়েন্টগুলো সরাসরি মেইন লেভেলে মাউন্ট করা হয়েছে যাতে ৪MD৪ এরর না আসে
+app.use("/api/rooms", createRoomsRouter(db, verifyToken));
+
 async function run() {
     try {
         await client.connect();
         console.log("Successfully connected to the MongoDB Cluster Engine.");
-
-        const db = client.db("studyNookDB");
-        const bookingsCollection = db.collection("bookings");
-
-        app.use("/api/rooms", createRoomsRouter(db, verifyToken));
-
-        app.post("/api/jwt", (req, res) => {
-            const user = req.body;
-            const token = jwt.sign(
-                { email: user.email },
-                process.env.JWT_SECRET,
-                { expiresIn: "7d" }
-            );
-
-            res.cookie("token", token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            }).send({ success: true });
-        });
-
-        app.post("/api/logout", (req, res) => {
-            res.clearCookie("token", {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            }).send({ success: true });
-        });
-
-        app.post("/api/bookings", verifyToken, async (req, res) => {
-            try {
-                const booking = req.body;
-                const conflict = await bookingsCollection.findOne({
-                    roomId: booking.roomId,
-                    date: booking.date,
-                    status: "confirmed",
-                    $or: [
-                        {
-                            startTime: { $lt: booking.endTime },
-                            endTime: { $gt: booking.startTime },
-                        },
-                    ],
-                });
-
-                if (conflict) {
-                    return res
-                        .status(400)
-                        .send({ message: "Time slot already booked" });
-                }
-
-                const result = await bookingsCollection.insertOne({
-                    ...booking,
-                    status: "confirmed",
-                    createdAt: new Date(),
-                });
-
-                await db.collection("rooms").updateOne(
-                    { _id: new ObjectId(booking.roomId) },
-                    { $inc: { bookingCount: 1 } }
-                );
-
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Booking failed" });
-            }
-        });
-
-        app.get("/api/bookings", verifyToken, async (req, res) => {
-            try {
-                const result = await bookingsCollection
-                    .find({ userEmail: req.user.email })
-                    .toArray();
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Failed to fetch bookings" });
-            }
-        });
-
-        app.patch("/api/bookings/:id/cancel", verifyToken, async (req, res) => {
-            try {
-                const id = req.params.id;
-                const result = await bookingsCollection.updateOne(
-                    { _id: new ObjectId(id), userEmail: req.user.email },
-                    { $set: { status: "cancelled" } }
-                );
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Cancel failed" });
-            }
-        });
-
     } catch (error) {
         console.error(error);
     }
 }
-
 run().catch(console.dir);
+
+app.post("/api/jwt", (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(
+        { email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }).send({ success: true });
+});
+
+app.post("/api/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }).send({ success: true });
+});
+
+app.post("/api/bookings", verifyToken, async (req, res) => {
+    try {
+        const bookingsCollection = db.collection("bookings");
+        const booking = req.body;
+
+        const conflict = await bookingsCollection.findOne({
+            roomId: booking.roomId,
+            date: booking.date,
+            status: "confirmed",
+            $or: [
+                {
+                    startTime: { $lt: booking.endTime },
+                    endTime: { $gt: booking.startTime },
+                },
+            ],
+        });
+
+        if (conflict) {
+            return res.status(400).send({ message: "Time slot already booked" });
+        }
+
+        const result = await bookingsCollection.insertOne({
+            ...booking,
+            status: "confirmed",
+            createdAt: new Date(),
+        });
+
+        await db.collection("rooms").updateOne(
+            { _id: new ObjectId(booking.roomId) },
+            { $inc: { bookingCount: 1 } }
+        );
+
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Booking failed" });
+    }
+});
+
+app.get("/api/bookings", verifyToken, async (req, res) => {
+    try {
+        const result = await db.collection("bookings")
+            .find({ userEmail: req.user.email })
+            .toArray();
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Failed to fetch bookings" });
+    }
+});
+
+app.patch("/api/bookings/:id/cancel", verifyToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await db.collection("bookings").updateOne(
+            { _id: new ObjectId(id), userEmail: req.user.email },
+            { $set: { status: "cancelled" } }
+        );
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Cancel failed" });
+    }
+});
 
 app.get("/", (req, res) => {
     res.send("StudyNook Server Running");

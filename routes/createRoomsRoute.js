@@ -1,36 +1,40 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
-function createRoomsRouter(db, verifyToken) {
+function createRoomsRouter(dbInstance, verifyToken) {
     const router = express.Router();
-    const roomsCollection = db.collection("rooms");
 
     router.get("/", async (req, res) => {
         try {
+            const roomsCollection = dbInstance.collection("rooms");
             const { search, amenities, maxPrice } = req.query;
             let query = {};
 
-            if (search) {
+            if (search && search.trim() !== "") {
                 query.name = { $regex: search, $options: "i" };
             }
 
-            if (amenities) {
+            if (amenities && amenities.trim() !== "") {
                 query.amenities = { $in: amenities.split(",") };
             }
 
-            if (maxPrice) {
-                query.hourlyRate = { $lte: parseFloat(maxPrice) };
+            if (maxPrice && maxPrice.trim() !== "") {
+                const parsedPrice = parseFloat(maxPrice);
+                if (!isNaN(parsedPrice)) {
+                    query.hourlyRate = { $lte: Number(parsedPrice) };
+                }
             }
 
             const result = await roomsCollection.find(query).toArray();
             res.send(result);
         } catch (error) {
-            res.status(500).send({ message: "Failed to fetch rooms catalog index matrix." });
+            res.status(500).send({ message: "Failed to fetch rooms ." });
         }
     });
 
     router.get("/home-rooms", async (req, res) => {
         try {
+            const roomsCollection = dbInstance.collection("rooms");
             const result = await roomsCollection.find().sort({ _id: -1 }).limit(6).toArray();
             res.send(result);
         } catch (error) {
@@ -40,6 +44,7 @@ function createRoomsRouter(db, verifyToken) {
 
     router.get("/:id", async (req, res) => {
         try {
+            const roomsCollection = dbInstance.collection("rooms");
             const result = await roomsCollection.findOne({ _id: new ObjectId(req.params.id) });
             res.send(result);
         } catch (error) {
@@ -49,6 +54,7 @@ function createRoomsRouter(db, verifyToken) {
 
     router.post("/", verifyToken, async (req, res) => {
         try {
+            const roomsCollection = dbInstance.collection("rooms");
             const roomPayload = {
                 name: req.body.name,
                 description: req.body.description,
