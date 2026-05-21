@@ -2,8 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
+
+const createRoomsRouter = require("./routes/rooms");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -54,8 +56,9 @@ async function run() {
         console.log("Successfully connected to the MongoDB Cluster Engine.");
 
         const db = client.db("studyNookDB");
-        const roomsCollection = db.collection("rooms");
         const bookingsCollection = db.collection("bookings");
+
+        app.use("/api/rooms", createRoomsRouter(db, verifyToken));
 
         app.post("/api/jwt", (req, res) => {
             const user = req.body;
@@ -78,75 +81,6 @@ async function run() {
                 secure: process.env.NODE_ENV === "production",
                 sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             }).send({ success: true });
-        });
-
-        app.get("/api/rooms", async (req, res) => {
-            try {
-                const search = req.query.search || "";
-                const amenities = req.query.amenities;
-                let query = {};
-
-                if (search) {
-                    query.name = { $regex: search, $options: "i" };
-                }
-
-                if (amenities) {
-                    query.amenities = { $all: amenities.split(",") };
-                }
-
-                const result = await roomsCollection.find(query).toArray();
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Failed to fetch rooms" });
-            }
-        });
-
-        app.get("/api/home-rooms", async (req, res) => {
-            try {
-                const result = await roomsCollection
-                    .find()
-                    .sort({ _id: -1 })
-                    .limit(6)
-                    .toArray();
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Failed to fetch featured rooms" });
-            }
-        });
-
-        app.get("/api/rooms/:id", async (req, res) => {
-            try {
-                const id = req.params.id;
-                const result = await roomsCollection.findOne({
-                    _id: new ObjectId(id),
-                });
-                res.send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Failed to fetch room parameters" });
-            }
-        });
-
-        app.post("/api/rooms", verifyToken, async (req, res) => {
-            try {
-                const roomPayload = {
-                    name: req.body.name,
-                    description: req.body.description,
-                    image: req.body.image,
-                    floor: req.body.floor,
-                    capacity: parseInt(req.body.capacity),
-                    hourlyRate: parseFloat(req.body.hourlyRate),
-                    amenities: req.body.amenities || [],
-                    ownerEmail: req.user.email,
-                    ownerName: req.body.ownerName,
-                    bookingCount: 0,
-                    createdAt: new Date(),
-                };
-
-                const result = await roomsCollection.insertOne(roomPayload);
-                res.status(201).send(result);
-            } catch (error) {
-                res.status(500).send({ message: "Failed to add room" });
-            }
         });
 
         app.post("/api/bookings", verifyToken, async (req, res) => {
@@ -176,7 +110,7 @@ async function run() {
                     createdAt: new Date(),
                 });
 
-                await roomsCollection.updateOne(
+                await db.collection("rooms").updateOne(
                     { _id: new ObjectId(booking.roomId) },
                     { $inc: { bookingCount: 1 } }
                 );
@@ -212,7 +146,7 @@ async function run() {
         });
 
     } catch (error) {
-        console.error("Database initialization failed:", error);
+        console.error(error);
     }
 }
 
