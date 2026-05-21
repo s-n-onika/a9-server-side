@@ -7,8 +7,7 @@ function createRoomsRouter(db, verifyToken) {
 
     router.get("/", async (req, res) => {
         try {
-            const search = req.query.search || "";
-            const amenities = req.query.amenities;
+            const { search, amenities, maxPrice } = req.query;
             let query = {};
 
             if (search) {
@@ -16,7 +15,11 @@ function createRoomsRouter(db, verifyToken) {
             }
 
             if (amenities) {
-                query.amenities = { $all: amenities.split(",") };
+                query.amenities = { $in: amenities.split(",") };
+            }
+
+            if (maxPrice) {
+                query.hourlyRate = { $lte: parseFloat(maxPrice) };
             }
 
             const result = await roomsCollection.find(query).toArray();
@@ -28,24 +31,7 @@ function createRoomsRouter(db, verifyToken) {
 
     router.get("/home-rooms", async (req, res) => {
         try {
-            const result = await roomsCollection
-                .find()
-                .sort({ _id: -1 })
-                .limit(6)
-                .toArray();
-            res.send(result);
-        } catch (error) {
-            res.status(500).send({ message: "Failed to fetch featured rooms catalog matrix." });
-        }
-    });
-
-    router.get("/featured-rooms", async (req, res) => {
-        try {
-            const result = await roomsCollection
-                .find()
-                .sort({ _id: -1 })
-                .limit(6)
-                .toArray();
+            const result = await roomsCollection.find().sort({ _id: -1 }).limit(6).toArray();
             res.send(result);
         } catch (error) {
             res.status(500).send({ message: "Failed to fetch featured rooms." });
@@ -54,11 +40,10 @@ function createRoomsRouter(db, verifyToken) {
 
     router.get("/:id", async (req, res) => {
         try {
-            const id = req.params.id;
-            const result = await roomsCollection.findOne({ _id: new ObjectId(id) });
+            const result = await roomsCollection.findOne({ _id: new ObjectId(req.params.id) });
             res.send(result);
         } catch (error) {
-            res.status(500).send({ message: "Failed to fetch specific room parameters." });
+            res.status(500).send({ message: "Failed to fetch room parameters." });
         }
     });
 
@@ -77,7 +62,6 @@ function createRoomsRouter(db, verifyToken) {
                 bookingCount: 0,
                 createdAt: new Date(),
             };
-
             const result = await roomsCollection.insertOne(roomPayload);
             res.status(201).send(result);
         } catch (error) {
