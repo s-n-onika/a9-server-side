@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
-const roomsRoutes = require("./routes/roomsRoutes");
+const roomsRoutes = require("./routes/roomsRoutes.js");
 
 const app = express();
 const port = process.env.PORT || 5000;
