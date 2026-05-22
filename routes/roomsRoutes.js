@@ -109,7 +109,7 @@ function roomsRoutes(dbInstance, verifyToken) {
             });
             res.send(result);
         } catch (error) {
-            res.status(500).send({ message: "Failed to process target index deletion request." });
+            res.status(500).send({ message: "Failed to process delete request." });
         }
     });
 
