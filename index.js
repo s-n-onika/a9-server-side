@@ -67,7 +67,7 @@ const verifyToken = (req, res, next) => {
 let db;
 async function getDB() {
     if (!db) {
-        await client.connect();
+        // await client.connect();
         db = client.db("StudyNookBD");
     }
     return db;
