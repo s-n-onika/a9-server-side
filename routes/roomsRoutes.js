@@ -15,20 +15,20 @@ function createRoomsRouter(dbInstance, verifyToken) {
             }
 
             if (amenities && amenities.trim() !== "") {
-                query.amenities = { $in: amenities.split(",") };
+                query.amenities = { $all: amenities.split(",") };
             }
 
             if (maxPrice && maxPrice.trim() !== "") {
                 const parsedPrice = parseFloat(maxPrice);
                 if (!isNaN(parsedPrice)) {
-                    query.hourlyRate = { $lte: Number(parsedPrice) };
+                    query.hourlyRate = { $lte: parsedPrice };
                 }
             }
 
             const result = await roomsCollection.find(query).toArray();
             res.send(result);
         } catch (error) {
-            res.status(500).send({ message: "Failed to fetch rooms ." });
+            res.status(500).send({ message: "Failed to fetch rooms catalog index matrix." });
         }
     });
 
@@ -72,6 +72,20 @@ function createRoomsRouter(dbInstance, verifyToken) {
             res.status(201).send(result);
         } catch (error) {
             res.status(500).send({ message: "Failed to store room listing asset metadata." });
+        }
+    });
+
+    router.delete("/:id", verifyToken, async (req, res) => {
+        try {
+            const id = req.params.id;
+            const roomsCollection = dbInstance.collection("rooms");
+            const result = await roomsCollection.deleteOne({
+                _id: new ObjectId(id),
+                ownerEmail: req.user.email
+            });
+            res.send(result);
+        } catch (error) {
+            res.status(500).send({ message: "Failed to process target index deletion request." });
         }
     });
 
