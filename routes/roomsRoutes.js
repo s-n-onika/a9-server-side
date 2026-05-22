@@ -35,7 +35,7 @@ function roomsRoutes(dbInstance, verifyToken) {
     router.get("/home-rooms", async (req, res) => {
         try {
             const roomsCollection = dbInstance.collection("rooms");
-            const result = await roomsCollection.find().sort({ _id: -1 }).limit(6).toArray();
+            const result = await roomsCollection.find().sort({ _id: -1 }).limit(3).toArray();
             res.send(result);
         } catch (error) {
             res.status(500).send({ message: "Failed to fetch featured rooms." });
