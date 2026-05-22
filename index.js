@@ -14,14 +14,14 @@ if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
     throw new Error("Missing environment variables");
 }
 
-app.use(
-    cors({
-        origin: ["http://localhost:5173", "https://a9-client-side.vercel.app"],
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
-    })
-);
+app.use(cors({
+    origin: "https://a9-client-side.vercel.app",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+}));
+
+app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -73,13 +73,14 @@ async function getDB() {
     return db;
 }
 
-app.use("/api/rooms", async (req, res, next) => {
-    try {
-        const activeDB = await getDB();
-        roomsRoutes(activeDB, verifyToken)(req, res, next);
-    } catch (err) {
-        res.status(500).send({ message: "Database initialization failed." });
-    }
+app.use("/api/rooms", (req, res, next) => {
+    getDB()
+        .then((activeDB) => {
+            roomsRoutes(activeDB, verifyToken)(req, res, next);
+        })
+        .catch((err) => {
+            res.status(500).send({ message: "Database initialization failed." });
+        });
 });
 
 app.post("/api/bookings", verifyToken, async (req, res) => {
