@@ -31,27 +31,7 @@ app.use((req, res, next) => {
 
     res.setHeader(
         "Content-Security-Policy",
-        `
-        default-src 'self';
-        connect-src 'self'
-        http://localhost:5000
-        http://localhost:5173
-        https://studynook-server-alpha.vercel.app
-        https://a9-client-side.vercel.app
-        https://*.googleapis.com
-        https://*.firebaseapp.com
-        https://identitytoolkit.googleapis.com;
-        
-        img-src 'self' data: https:;
-        
-        script-src 'self' 'unsafe-inline' 'unsafe-eval';
-        
-        style-src 'self' 'unsafe-inline';
-        
-        frame-src
-        https://accounts.google.com
-        https://*.firebaseapp.com;
-        `
+        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 https://studynook-server-alpha.vercel.app https://a9-client-side.vercel.app https://*.googleapis.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src https://accounts.google.com https://*.firebaseapp.com;"
     );
 
     res.setHeader(
