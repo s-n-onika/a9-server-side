@@ -52,6 +52,30 @@ function createRoomsRouter(dbInstance, verifyToken) {
         }
     });
 
+    router.put("/:id", verifyToken, async (req, res) => {
+        try {
+            const id = req.params.id;
+            const roomsCollection = dbInstance.collection("rooms");
+            const updatePayload = {
+                name: req.body.name,
+                description: req.body.description,
+                image: req.body.image,
+                floor: req.body.floor,
+                capacity: parseInt(req.body.capacity),
+                hourlyRate: parseFloat(req.body.hourlyRate),
+                amenities: req.body.amenities || [],
+                updatedAt: new Date()
+            };
+            const result = await roomsCollection.updateOne(
+                { _id: new ObjectId(id), ownerEmail: req.user.email },
+                { $set: updatePayload }
+            );
+            res.send(result);
+        } catch (error) {
+            res.status(500).send({ message: "Failed to modify room record." });
+        }
+    });
+
     router.post("/", verifyToken, async (req, res) => {
         try {
             const roomsCollection = dbInstance.collection("rooms");
