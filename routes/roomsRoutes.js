@@ -1,7 +1,7 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
-function createRoomsRouter(dbInstance, verifyToken) {
+function roomsRoutes(dbInstance, verifyToken) {
     const router = express.Router();
 
     router.get("/", async (req, res) => {
@@ -116,4 +116,4 @@ function createRoomsRouter(dbInstance, verifyToken) {
     return router;
 }
 
-module.exports = createRoomsRouter;
+module.exports = roomsRoutes;

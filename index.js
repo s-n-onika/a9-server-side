@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
-const roomsRoutes = require("./routes/createRoomsRoute");
+const roomsRoutes = require("./routes/roomsRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,7 +16,7 @@ if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "https://studynook000.netlify.app"],
+        origin: ["http://localhost:5173", "https://studynook000.netlify.app", "https://a9-server-side.onrender.com"],
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
