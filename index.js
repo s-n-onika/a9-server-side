@@ -177,6 +177,12 @@ app.post("/api/jwt", async (req, res) => {
     try {
         const user = req.body;
 
+        if (!user?.email) {
+            return res.status(400).send({
+                message: "Email missing"
+            });
+        }
+
         const token = jwt.sign(
             { email: user.email },
             process.env.JWT_SECRET,
@@ -189,12 +195,15 @@ app.post("/api/jwt", async (req, res) => {
             sameSite: "none"
         });
 
-        res.send({ success: true });
+        res.status(200).send({
+            success: true
+        });
 
     } catch (error) {
         console.error("JWT ERROR:", error);
+
         res.status(500).send({
-            message: "JWT generation failed"
+            message: error.message
         });
     }
 });
