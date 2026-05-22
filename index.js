@@ -92,7 +92,7 @@ const verifyToken = (req, res, next) => {
 let db;
 async function getDB() {
     if (!db) {
-        // await client.connect();
+        await client.connect();
         db = client.db("StudyNookBD");
     }
     return db;
@@ -173,19 +173,30 @@ app.patch("/api/bookings/:id/cancel", verifyToken, async (req, res) => {
     }
 });
 
-app.post("/api/jwt", (req, res) => {
-    const user = req.body;
-    const token = jwt.sign(
-        { email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-    );
+app.post("/api/jwt", async (req, res) => {
+    try {
+        const user = req.body;
 
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-    }).send({ success: true });
+        const token = jwt.sign(
+            { email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        });
+
+        res.send({ success: true });
+
+    } catch (error) {
+        console.error("JWT ERROR:", error);
+        res.status(500).send({
+            message: "JWT generation failed"
+        });
+    }
 });
 
 app.get("/api/logout", (req, res) => {
