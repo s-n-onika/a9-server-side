@@ -16,7 +16,7 @@ if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "https://a9-client-side.onrender.com"],
+        origin: ["http://localhost:5173"],
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
@@ -30,7 +30,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
     res.setHeader(
         "Content-Security-Policy",
-        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 https://a9-client-side.onrender.com/; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 ; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
     );
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
