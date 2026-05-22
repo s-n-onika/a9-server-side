@@ -8,7 +8,6 @@ require("dotenv").config();
 const roomsRoutes = require("./routes/roomsRoutes.js");
 
 const app = express();
-const app = require("../server");
 const port = process.env.PORT || 5000;
 
 if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
