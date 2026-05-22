@@ -30,7 +30,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
     res.setHeader(
         "Content-Security-Policy",
-        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 https://a9-server-side.vercel.app/ http://a9-client-side.vercel.app/; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 https://a9-server-side.vercel.app https://a9-client-side.vercel.app; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
     );
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
