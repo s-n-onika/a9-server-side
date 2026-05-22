@@ -6,7 +6,7 @@ Built with **Node.js, Express, MongoDB, JWT authentication**, and deployed on **
 ---
 
 ## 🚀 Live Server
-👉 https://a9-server-side.vercel.app
+👉 https://a9-server-side-alpha.vercel.app
 
 ---
 
