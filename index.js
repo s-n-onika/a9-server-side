@@ -28,16 +28,41 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
+
     res.setHeader(
         "Content-Security-Policy",
-        "default-src 'self'; connect-src 'self' http://localhost:5000 http://localhost:5173 https://studynook-server-alpha.vercel.app https://a9-client-side.vercel.app; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+        `
+        default-src 'self';
+        connect-src 'self'
+        http://localhost:5000
+        http://localhost:5173
+        https://studynook-server-alpha.vercel.app
+        https://a9-client-side.vercel.app
+        https://*.googleapis.com
+        https://*.firebaseapp.com
+        https://identitytoolkit.googleapis.com;
+        
+        img-src 'self' data: https:;
+        
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        
+        style-src 'self' 'unsafe-inline';
+        
+        frame-src
+        https://accounts.google.com
+        https://*.firebaseapp.com;
+        `
     );
+
+    res.setHeader(
+        "Cross-Origin-Opener-Policy",
+        "same-origin-allow-popups"
+    );
+
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
+
     next();
 });
-
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
     serverApi: {
