@@ -8,6 +8,7 @@ require("dotenv").config();
 const roomsRoutes = require("./routes/roomsRoutes.js");
 
 const app = express();
+const app = require("../server");
 const port = process.env.PORT || 5000;
 
 if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) {
@@ -163,6 +164,11 @@ app.post("/api/jwt", (req, res) => {
     }).send({ success: true });
 });
 
+app.get("/api/logout", (req, res) => {
+    res.clearCookie("token");
+    return res.json({ message: "Logged out" });
+});
+
 app.post("/api/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
@@ -170,7 +176,7 @@ app.post("/api/logout", (req, res) => {
         sameSite: "none"
     });
 
-    return res.status(200).json({ success: true });
+    res.json({ success: true });
 });
 
 app.get("/", (req, res) => {
